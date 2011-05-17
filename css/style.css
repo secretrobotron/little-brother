@@ -1,0 +1,48 @@
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font: 12pt Helvetica;
+  color: #fff;
+}
+
+#editor {
+  width: 300px;
+  height: 100%;
+  min-height: 100%;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  background: rgba(64, 64, 64, .5);
+  padding: 2px;
+}
+
+#editor-sequences {
+  width: 100%;
+}
+
+#editor ul {
+  list-style-type: none;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+#editor span {
+}
+
+#editor fieldset input {
+  float: right;
+  width: 200px;
+}
+
+#editor p p {
+  clear: both;
+}
+
+#editor fieldset {
+  border: 1px solid #333;
+}
+

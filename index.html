@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+		<script src="lib/popcorn/popcorn.js"></script>
+		<script src="lib/popcorn/popcorn.baseplayer.js"></script>
+		<script src="lib/popcorn/popcorn.code.js"></script>
+    <script type="text/javascript" src="lib/cubicvr/CubicVR.js"></script>
+    <script type="text/javascript" src="js/little-brother.js"></script>
+    <script type="text/javascript" src="js/sequences/sequence1.js"></script>
+  </head>
+  <body>
+    <div id="editor">
+      <h1>Editor</h1>
+      <p>
+        <h2>Sequences</h2>
+        <p>
+          <select id="editor-sequences" size="4">
+          </select>
+        </p>
+        <div id="editor-properties">
+          <p>
+            <fieldset>
+              <legend>Properties</legend>
+              <ul>
+                <li><label>Name:</label><input type="textbox" id="editor-sequence-name" /></li>
+              </ul>
+            </fieldset>
+          </p>
+          <p>
+            <input type="button" id="editor-save-sequence" value="Save" />
+            <input type="button" id="editor-goto-sequence" value="Go to Sequence" />
+          </p>
+        </div>
+      </p>
+      <p>
+        <h3></h3>
+      </p>
+    </div>
+  </body>
+</html>
