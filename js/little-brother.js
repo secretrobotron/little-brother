@@ -1,12 +1,14 @@
 
 var LittleBrother = (function () {
 
-  var scene, mainLoop;
+  var scene, mainLoop, mvc;
 
   var sequences = [], currentEditingSequence, currentPlayingSequence;
   var editorProperties = {};
 
   var shaderList = [], shaders = {}, fxChain;
+
+  var mainLightTarget = [0,0,0], mainLightPoint = [0,0,0];
 
   /******************************************************************************
    * Internal LB Functions
@@ -68,6 +70,23 @@ var LittleBrother = (function () {
         editorProperties.audioElement.removeChild(editorProperties.audioElement.children[i]);
       } //for
     } //if
+    if (editorProperties.panels.children) {
+      while (editorProperties.panels.children.length > 0) {
+        editorProperties.panels.removeChild(editorProperties.panels.children[0]);
+      } //for
+    } //if
+    for (var i=0; i<sequence.panels.length; ++i) {
+      (function (panel) {
+        var option = document.createElement('OPTION');
+        option.innerHTML = '['+ panel.time +'] ' + panel.image;
+        option.addEventListener('dblclick', function (e) {
+          if (currentEditingSequence === currentPlayingSequence) {
+            currentEditingSequence.focusOnPanel(panel);
+          } //if
+        }, false);
+        editorProperties.panels.appendChild(option);
+      })(sequence.panels[i]);
+    } //for
     editorProperties.audioElement.appendChild(sequence.audioElement);
     currentEditingSequence = sequence;
   }; //setupEditorProperties
@@ -81,7 +100,7 @@ var LittleBrother = (function () {
 
     sequence.editorOptionElement = option;
 
-    option.addEventListener('click', function (e) {
+    option.addEventListener('dblclick', function (e) {
       toggleEditorProperties(true);
       setupEditorProperties(sequence);
     }, false);
@@ -172,6 +191,8 @@ var LittleBrother = (function () {
 
     scene = new CubicVR.Scene(canvas.width, canvas.height, 80, 0.01, 100);
 
+    mvc = new CubicVR.MouseViewController(canvas, scene.camera);
+
     targetObject = new CubicVR.SceneObject(null);
     scene.bindSceneObject(targetObject);
     targetObject.position = [0,0,0];
@@ -202,7 +223,7 @@ var LittleBrother = (function () {
       intensity: 20,
       distance: 100,
       position: [0, 0, -10],
-      cutoff: 25,
+      cutoff: 10,
      });
     mainLight.lookat([0, 0, 0]);
     scene.bindLight(mainLight);
@@ -215,7 +236,12 @@ var LittleBrother = (function () {
 
     mainLoop = new CubicVR.MainLoop( function (timer, gl) {
 
-      mainLight.lookat([Math.sin(timer.getSeconds()), Math.cos(timer.getSeconds()/2), 0]);
+      mainLightPoint[0] -= (mainLightPoint[0] - mainLightTarget[0])*.015;
+      mainLightPoint[1] -= (mainLightPoint[1] - mainLightTarget[1])*.015;
+      mainLightPoint[2] -= (mainLightPoint[2] - mainLightTarget[2])*.015;
+
+      mainLight.lookat(mainLightPoint);
+
       scene.camera.target = targetObject.position;
       if (currentPlayingSequence) {
         currentPlayingSequence.updateGraphics(timer, gl);
@@ -235,7 +261,8 @@ var LittleBrother = (function () {
 
     editorProperties = {
       name: document.getElementById('editor-sequence-name'),
-      audioElement: document.getElementById('editor-sequence-audio')
+      audioElement: document.getElementById('editor-sequence-audio'),
+      panels: document.getElementById('editor-sequence-panels'),
     };
 
     toggleEditorProperties(false);
@@ -244,20 +271,29 @@ var LittleBrother = (function () {
       addSequenceToEditor(sequences[i]);
     } //for
 
+    //document.getElementById('editor-sequence-panels').addEventListener('dblclick', function (e) {
+    //}, false);
+
     document.getElementById('editor-save-sequence').addEventListener('click', function (e) {
       saveEditingSequence();
     }, false);
 
+    document.getElementById('editor-show-sequence').addEventListener('click', function (e) {
+      LittleBrother.showSequence(currentEditingSequence);
+    }, false);
+
+    /*
     document.getElementById('editor-play-sequence').addEventListener('click', function (e) {
       LittleBrother.playSequence(currentEditingSequence);
     }, false);
 
-    document.getElementById('editor-stop-sequence').addEventListener('click', function (e) {
-      LittleBrother.stopSequence(currentEditingSequence);
+    document.getElementById('editor-pause-sequence').addEventListener('click', function (e) {
+      LittleBrother.pauseSequence(currentEditingSequence);
     }, false);
+    */
 
     for (var i=0; i<sequences.length; ++i) {
-      sequences[i].prepareSequence(scene);
+      sequences[i].prepare(scene);
     } //for
     
   }, false); //DOM ready
@@ -278,10 +314,20 @@ var LittleBrother = (function () {
 
     playSequence: function (sequence) {
       stopCurrentSequence();
-      currentPlayingSequence = sequence;
       sequence.popcorn.currentTime(0);
       sequence.play();
     }, //playSequence
+
+    showSequence: function (sequence) {
+      if (sequence !== currentPlayingSequence) {
+        currentPlayingSequence = sequence;
+        sequence.show();
+      } //if
+    },
+
+    pauseSequence: function (sequence) {
+      sequence.pause();
+    }, //stopSequence
 
     stopSequence: function (sequence) {
       sequence.stop();
@@ -332,8 +378,7 @@ var LittleBrother = (function () {
         return scene;
       };
 
-      this.startSequence = options.start || function () {};
-      this.stopSequence = options.stop || function () {};
+      this.options = options;
 
       this.addPanel = function (options) {
         var panel = options.panel || new LittleBrother.Panel(options);
@@ -348,28 +393,30 @@ var LittleBrother = (function () {
         audioElement.setAttribute('controls', true);
         this.popcorn = Popcorn(audioElement);
         this.popcorn.listen('play', function () {
-          that.startSequence.apply(that, [mainLoop.timer]);
+          that.options.start.apply(that, [mainLoop.timer]);
         });
         this.popcorn.listen('pause', function () {
-          that.stopSequence.apply(that, [mainLoop.timer]);
+          that.options.pause.apply(that, [mainLoop.timer]);
         });
       }; //addAudio
 
-      this.update = options.update || function () {};
-      this.updateGraphics = options.updateGraphics || function () {};
+      this.update = that.options.update || function () {};
+      this.updateGraphics = that.options.updateGraphics || function () {};
 
-      if (options.audio) {
-        this.addAudio(options.audio);
+      if (that.options.audio) {
+        this.addAudio(that.options.audio);
       } //if
 
-      this.prepare = options.prepare || function () {};
+      this.show = function () {
+        that.options.show.apply(that);
+      }; //show
 
-      this.prepareSequence = function (scene) {
-        if (options.panels) {
-          for (var i=0; i<options.panels.length; ++i) {
-            this.addPanel(options.panels[i]);
+      this.prepare = function (scene) {
+        if (that.options.panels) {
+          for (var i=0; i<that.options.panels.length; ++i) {
+            this.addPanel(that.options.panels[i]);
           } //for
-          options.prepare.apply(that, [{scene: scene}]);
+          that.options.prepare.apply(that, [{scene: scene}]);
         } //if
       };
 
@@ -380,6 +427,10 @@ var LittleBrother = (function () {
       this.stop = function () {
         this.popcorn.pause();
       }; //stop
+
+      this.pause = function () {
+        this.popcorn.pause();
+      }; //pause
 
       this.popcorn.listen('timeupdate', function (e) {
         that.update();
@@ -393,6 +444,8 @@ var LittleBrother = (function () {
           panel.sceneObject.position[1] + offset[1],
           panel.sceneObject.position[2] + offset[2] - 0.2,
         ];
+
+        mainLightTarget = panel.sceneObject.position;
 
         setMotionTo(scene.camera, p, s, 1);
         setMotionTo(targetObject, panel.sceneObject.position, s, 1);

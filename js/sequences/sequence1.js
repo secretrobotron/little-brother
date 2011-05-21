@@ -54,16 +54,22 @@ LittleBrother.addSequence( (function () {
             start: panel.time,
             end: panel.time+1,
             onStart: function (options) {
-              that.focusOnPanel(panel, [Math.random()*.2, Math.random()*.1, 0]);
+              that.focusOnPanel(panel, [(Math.random()*2-1)*.1, (Math.random()*2-1)*.1, 0]);
             },
           });
         })(panels[i]);
       } //for
     },
-
-    start: function (timer) {
+    show: function () {
       scene.bindSceneObject(rootPanelObject); 
-      animKit.transition(timer.getSeconds(), 5, 1, rootPanelObject, "explode", "in");
+      scene.setSkyBox(new CubicVR.SkyBox({texture:'assets/classroom-skybox.png'}));
+    },
+    start: function (timer) {
+      if (this.popcorn.currentTime() === 0) {
+        animKit.transition(timer.getSeconds(), 5, 1, rootPanelObject, "explode", "in");
+      } //if
+    },
+    pause: function (timer) {
     },
     stop: function (timer) {
       animKit.transition(timer.getSeconds(), 5, 1, rootPanelObject, "explode", "out");
