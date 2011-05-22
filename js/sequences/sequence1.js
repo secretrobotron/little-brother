@@ -7,54 +7,127 @@ LittleBrother.addSequence( (function () {
   sequence = new LittleBrother.Sequence({
     name: 'Test',
     audio: 'assets/littlebrother scratch track_1-2.oga',
-    panels: [
-      { image: 'assets/seq1/storyboard0000.png',
+    popcorn: function () {
+      this.popcorn
+      .littlebrother({ 
+        image: 'assets/seq1/storyboard0000.png',
+        position: [1, 2, 0],
+        start: 2,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0001.png',
+        position: [0, 2, 0],
+        start: 4,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0002.png',
         position: [0, 1, 0],
-        time: 2,
-      },
-      { image: 'assets/seq1/storyboard0001.png',
+        start: 6,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0003a.png',
         position: [0, 0, 0],
-        time: 10,
-      },
-      { image: 'assets/seq1/storyboard0002.png',
-        position: [1, 0, 0],
-        time: 12,
-      },
-      { image: 'assets/seq1/storyboard0003a.png',
-        position: [1, -1, 0],
-        time: 15,
-      },
-      { image: 'assets/seq1/storyboard0003b.png',
-        position: [1, -2, 0],
-        time: 16,
-      },
-      { image: 'assets/seq1/storyboard0004.png',
-        position: [1, -3, 0],
-        time: 20,
-      },
-      { image: 'assets/seq1/storyboard0005.png',
-        position: [0, -3, 0],
-        time: 25,
-      },
-    ],
+        start: 8,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0003b.png',
+        position: [-.5, 0, .5],
+        rotation: [0, 90, 0],
+        start: 10,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0004.png',
+        position: [-.5, 0, 1.5],
+        rotation: [0, 90, 0],
+        start: 12,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0005.png',
+        position: [-.5, 0, 2.5],
+        rotation: [0, 90, 0],
+        start: 14,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0006.png',
+        position: [-.5, -1, 2.5],
+        rotation: [0, 90, 0],
+        start: 16,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0008.png',
+        position: [-.5, -2, 2.5],
+        rotation: [0, 90, 0],
+        start: 18,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0009.png',
+        position: [-.5, -2, 1.5],
+        rotation: [0, 90, 0],
+        start: 20,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0010.png',
+        position: [-.5, -2, .5],
+        rotation: [0, 90, 0],
+        start: 22,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0011.png',
+        position: [-.5, -2, -.5],
+        rotation: [0, 90, 0],
+        start: 24,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0012.png',
+        position: [-.49, -2, -.5],
+        rotation: [0, -90, 0],
+        start: 26,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0013.png',
+        position: [-.49, -2, .5],
+        rotation: [0, -90, 0],
+        start: 28,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0014.png',
+        position: [-.49, -2, 1.5],
+        rotation: [0, -90, 0],
+        start: 30,
+      })
+      .littlebrother({
+        image: 'assets/seq1/storyboard0015.png',
+        position: [0, -2, 2],
+        rotation: [0, 0, 0],
+        start: 32,
+      });
+
+    },
 
     prepare: function (options) {
-      scene = options.scene;
-      animKit = new AnimationKit();
-      rootPanelObject = new CubicVR.SceneObject(new CubicVR.Mesh());
-      for (var i=0; i<this.panels.length; ++i) {
-        rootPanelObject.bindChild(this.panels[i].sceneObject);
-      } //for
-      rootPanelObject.position = [0, 0, 1];
       var that = this;
       var panels = this.panels;
+
+      scene = options.scene;
+      animKit = new AnimationKit();
+
+      rootPanelObject = new CubicVR.SceneObject(new CubicVR.Mesh());
+      for (var i=0; i<this.panels.length; ++i) {
+        rootPanelObject.bindChild(panels[i].sceneObject);
+      } //for
+      rootPanelObject.position = [0, 0, 1];
+
       for (var i=0; i<panels.length; ++i)  {
         (function (panel) {
           that.popcorn.code({
-            start: panel.time,
-            end: panel.time+1,
+            start: panel.start,
+            end: panel.start+1,
             onStart: function (options) {
-              that.focusOnPanel(panel, [(Math.random()*2-1)*.1, (Math.random()*2-1)*.1, 0]);
+              that.focusOnPanel(panel, [
+                rootPanelObject.position[0],
+                rootPanelObject.position[1],
+                rootPanelObject.position[2],
+              ]);
             },
           });
         })(panels[i]);

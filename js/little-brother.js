@@ -8,7 +8,7 @@ var LittleBrother = (function () {
 
   var shaderList = [], shaders = {}, fxChain;
 
-  var mainLightTarget = [0,0,0], mainLightPoint = [0,0,0];
+  var cameraTarget, mainLight, mainLightTarget;
 
   /******************************************************************************
    * Internal LB Functions
@@ -78,7 +78,7 @@ var LittleBrother = (function () {
     for (var i=0; i<sequence.panels.length; ++i) {
       (function (panel) {
         var option = document.createElement('OPTION');
-        option.innerHTML = '['+ panel.time +'] ' + panel.image;
+        option.innerHTML = '['+ panel.start +'] ' + panel.image;
         option.addEventListener('dblclick', function (e) {
           if (currentEditingSequence === currentPlayingSequence) {
             currentEditingSequence.focusOnPanel(panel);
@@ -193,9 +193,13 @@ var LittleBrother = (function () {
 
     mvc = new CubicVR.MouseViewController(canvas, scene.camera);
 
-    targetObject = new CubicVR.SceneObject(null);
-    scene.bindSceneObject(targetObject);
-    targetObject.position = [0,0,0];
+    cameraTarget = new CubicVR.SceneObject(null);
+    scene.bindSceneObject(cameraTarget);
+    cameraTarget.position = [0,0,0];
+
+    mainLightTarget = new CubicVR.SceneObject(null);
+    scene.bindSceneObject(mainLightTarget);
+    mainLightTarget.position = [0,0,1];
 
     var defaultObjectMesh = CubicVR.primitives.plane({
       size: 1,
@@ -216,14 +220,14 @@ var LittleBrother = (function () {
     defaultObject.position = [0, 0, 20];
     defaultObject.rotation = [0, 0, 0];
 
-    var mainLight = new CubicVR.Light({
+    mainLight = new CubicVR.Light({
       type: CubicVR.enums.light.type.SPOT,
       specular: [1, 1, 1],
       diffuse: [1, 1, 1],
       intensity: 20,
       distance: 100,
       position: [0, 0, -10],
-      cutoff: 10,
+      cutoff: 15,
      });
     mainLight.lookat([0, 0, 0]);
     scene.bindLight(mainLight);
@@ -236,13 +240,9 @@ var LittleBrother = (function () {
 
     mainLoop = new CubicVR.MainLoop( function (timer, gl) {
 
-      mainLightPoint[0] -= (mainLightPoint[0] - mainLightTarget[0])*.015;
-      mainLightPoint[1] -= (mainLightPoint[1] - mainLightTarget[1])*.015;
-      mainLightPoint[2] -= (mainLightPoint[2] - mainLightTarget[2])*.015;
+      mainLight.lookat(mainLightTarget.position);
 
-      mainLight.lookat(mainLightPoint);
-
-      scene.camera.target = targetObject.position;
+      scene.camera.target = cameraTarget.position;
       if (currentPlayingSequence) {
         currentPlayingSequence.updateGraphics(timer, gl);
       } //if
@@ -338,30 +338,58 @@ var LittleBrother = (function () {
      *******************************/
     Panel: function (options) {
       this.image = options.image;
-      this.time = options.time;
-      this.position = options.position;
-      var texture = new CubicVR.Texture(options.image);
-      var so = new CubicVR.SceneObject( CubicVR.primitives.plane( {
-        size: 1.0,
-        material: new CubicVR.Material({
-          color: [1, 1, 1],
-          specular: [.01, .01, .01],
-          diffuse: [1, 1, 1],
-          textures: {
-            color: texture,
-          },
-        }),
-        uvmapper: {
-          projectionMode: CubicVR.enums.uv.projection.PLANAR,
-          projectionAxis: CubicVR.enums.uv.axis.Z,
-          scale: [1, 1, 1],
-        },
-      }).triangulateQuads().compile().clean() );
+      this.start = options.start;
+      this.position = options.position || [0,0,0];
+      this.rotation = options.rotation || [0,0,0];
+      this.scale = options.scale || [1,1,1];
 
+      var mesh = new CubicVR.Mesh();
+      var image = new Image();
+      var BORDER_WIDTH = 20;
+      image.onload = function (e) {
+        var w = image.width, h = image.height;
+        var texture = new CubicVR.CanvasTexture({width: w, height: h, update: function (canvas, ctx) {
+          ctx.drawImage(image, 0, 0);
+          ctx.lineWidth = BORDER_WIDTH;
+          ctx.strokeStyle = "#000000";
+          ctx.beginPath();
+          ctx.rect(0, 0, w, h);
+          ctx.stroke();
+          ctx.lineWidth = BORDER_WIDTH/2;
+          ctx.strokeStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.rect(0, 0, w, h);
+          ctx.stroke();
+        }});
+        CubicVR.primitives.plane( {
+          mesh: mesh,
+          size: 1.0,
+          material: new CubicVR.Material({
+            color: [1, 1, 1],
+            specular: [.01, .01, .01],
+            diffuse: [1, 1, 1],
+            textures: {
+              color: texture,
+            },
+          }),
+          uvmapper: {
+            projectionMode: CubicVR.enums.uv.projection.PLANAR,
+            projectionAxis: CubicVR.enums.uv.axis.Z,
+            scale: [1, 1, 1],
+          },
+        }).triangulateQuads().compile().clean();
+
+        texture.update();
+      };
+      image.src = options.image;
+
+      var so = new CubicVR.SceneObject(mesh);
       this.sceneObject = so;
 
-      so.position = [options.position[0], options.position[1], options.position[2]] || [0, 0, 0];
-      this.originalPosition = [options.position[0], options.position[1], options.position[2]] || [0, 0, 0];
+      so.position = [this.position[0], this.position[1], this.position[2]];
+      so.rotation = [this.rotation[0], this.rotation[1], this.rotation[2]];
+      so.scale = [this.scale[0], this.scale[1], this.scale[2]];
+      this.originalPosition = [this.position[0], this.position[1], this.position[2]];
     }, //Panel
 
     /*******************************
@@ -381,7 +409,7 @@ var LittleBrother = (function () {
       this.options = options;
 
       this.addPanel = function (options) {
-        var panel = options.panel || new LittleBrother.Panel(options);
+        var panel = new LittleBrother.Panel(options);
         this.panels.push(panel);
       }; //addPanel
 
@@ -417,8 +445,15 @@ var LittleBrother = (function () {
           for (var i=0; i<that.options.panels.length; ++i) {
             this.addPanel(that.options.panels[i]);
           } //for
-          that.options.prepare.apply(that, [{scene: scene}]);
         } //if
+        if (that.options.popcorn) {
+          that.options.popcorn.apply(this, []);
+          var trackEvents = this.popcorn.getTrackEvents();
+          for (var i=0; i<trackEvents.length; ++i) {
+            that.addPanel(trackEvents[i]);
+          } //for
+        } //if
+        that.options.prepare.apply(that, [{scene: scene}]);
       };
 
       this.play = function () {
@@ -439,17 +474,47 @@ var LittleBrother = (function () {
 
       this.focusOnPanel = function (panel, offset) {
         offset = offset || [0,0,0];
-        var s = mainLoop.timer.getSeconds();
-        var p = [
-          panel.sceneObject.position[0] + offset[0],
-          panel.sceneObject.position[1] + offset[1],
-          panel.sceneObject.position[2] + offset[2] - 0.2,
+        var sec = mainLoop.timer.getSeconds();
+        var rot = panel.sceneObject.rotation;
+
+        var norm = [
+          Math.sin(rot[1]/180*Math.PI),
+          0,
+          Math.cos(rot[1]/180*Math.PI),
         ];
 
-        mainLightTarget = panel.sceneObject.position;
+        var adj = [
+          panel.sceneObject.position[0] + offset[0],
+          panel.sceneObject.position[1] + offset[1],
+          panel.sceneObject.position[2] + offset[2],
+        ];
 
-        setMotionTo(scene.camera, p, s, 1);
-        setMotionTo(targetObject, panel.sceneObject.position, s, 1);
+        function rand() {
+          return (Math.random()*2)-1;
+        }
+
+        var cameraPos = [
+          adj[0] - norm[0] + rand() * .3,
+          adj[1] - norm[1] + rand() * .4,
+          adj[2] - norm[2] + rand() * .3,
+        ];
+
+        var lightPos = [
+          adj[0] - norm[0] * 5,
+          adj[1] - norm[1] * 5,
+          adj[2] - norm[2] * 5,
+        ];
+
+        var lightTar = [
+          adj[0] + rand() * .3,
+          adj[1] + rand() * .3,
+          adj[2] + rand() * .3,
+        ];
+
+        setMotionTo(scene.camera, cameraPos, sec, 1);
+        setMotionTo(mainLight, lightPos, sec, 1);
+        setMotionTo(mainLightTarget, lightTar, sec, 2);
+        setMotionTo(cameraTarget, adj, sec, 1);
       };
 
     }, //Sequence
