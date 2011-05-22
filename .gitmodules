@@ -1,0 +1,3 @@
+[submodule "lib/butter"]
+	path = lib/butter
+	url = git://github.com/webmademovies/butter.git

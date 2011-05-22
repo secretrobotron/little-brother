@@ -393,6 +393,7 @@ var LittleBrother = (function () {
         audioElement.setAttribute('controls', true);
         this.popcorn = Popcorn(audioElement);
         this.popcorn.listen('play', function () {
+          LittleBrother.showSequence(that);
           that.options.start.apply(that, [mainLoop.timer]);
         });
         this.popcorn.listen('pause', function () {

@@ -47,6 +47,11 @@ html, body {
   width: 200px;
 }
 
+#editor fieldset fieldset input {
+  float: right;
+  width: 180px;
+}
+
 #editor p p {
   clear: both;
 }
