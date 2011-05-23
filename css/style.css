@@ -17,6 +17,7 @@ html, body {
   top: 0px;
   background: rgba(64, 64, 64, .5);
   padding: 2px;
+  display: none;
 }
 
 #editor-sequences {
@@ -60,3 +61,20 @@ html, body {
   border: 1px solid #333;
 }
 
+#console {
+  position: absolute;
+  bottom: 0;
+  height: 30%;
+  min-height: 30%;
+  width: 100%;
+  min-width: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 0;
+  color: #fff;
+}
+
+#player {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+}

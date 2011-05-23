@@ -10,6 +10,8 @@ var LittleBrother = (function () {
 
   var cameraTarget, mainLight, mainLightTarget;
 
+  var consoleQueue = "", consoleTimeout;
+
   /******************************************************************************
    * Internal LB Functions
    ******************************************************************************/
@@ -282,19 +284,36 @@ var LittleBrother = (function () {
       LittleBrother.showSequence(currentEditingSequence);
     }, false);
 
-    /*
-    document.getElementById('editor-play-sequence').addEventListener('click', function (e) {
-      LittleBrother.playSequence(currentEditingSequence);
+    document.getElementById('player-play').addEventListener('click', function (e) {
+      if (currentPlayingSequence) {
+        LittleBrother.playSequence(currentPlayingSequence);
+      }
+      else {
+        LittleBrother.playSequence(sequences[0]);
+      } //if
     }, false);
 
-    document.getElementById('editor-pause-sequence').addEventListener('click', function (e) {
-      LittleBrother.pauseSequence(currentEditingSequence);
+    document.getElementById('player-pause').addEventListener('click', function (e) {
+      if (currentPlayingSequence) {
+        LittleBrother.pauseSequence(currentPlayingSequence);
+      } //if
     }, false);
-    */
+
+    document.getElementById('player-editor').addEventListener('click', function (e) {
+      var editor = document.getElementById('editor');
+      if (editor.style.display === 'none' || editor.style.display === '') {
+        editor.style.display = 'block';
+      }
+      else {
+        editor.style.display = 'none';
+      } //if
+    }, false);
 
     for (var i=0; i<sequences.length; ++i) {
       sequences[i].prepare(scene);
     } //for
+
+    $('#console').hide();
     
   }, false); //DOM ready
 
@@ -313,8 +332,6 @@ var LittleBrother = (function () {
     stopCurrentSequence: stopCurrentSequence,
 
     playSequence: function (sequence) {
-      stopCurrentSequence();
-      sequence.popcorn.currentTime(0);
       sequence.play();
     }, //playSequence
 
@@ -450,7 +467,9 @@ var LittleBrother = (function () {
           that.options.popcorn.apply(this, []);
           var trackEvents = this.popcorn.getTrackEvents();
           for (var i=0; i<trackEvents.length; ++i) {
-            that.addPanel(trackEvents[i]);
+            if (trackEvents[i]._id.indexOf('littlebrother') > -1) {
+              that.addPanel(trackEvents[i]);
+            } //if
           } //for
         } //if
         that.options.prepare.apply(that, [{scene: scene}]);
@@ -494,9 +513,9 @@ var LittleBrother = (function () {
         }
 
         var cameraPos = [
-          adj[0] - norm[0] + rand() * .3,
-          adj[1] - norm[1] + rand() * .4,
-          adj[2] - norm[2] + rand() * .3,
+          adj[0] - norm[0]*1.5 + rand() * .15,
+          adj[1] - norm[1]*1.5 + rand() * .4,
+          adj[2] - norm[2]*1.5 + rand() * .15,
         ];
 
         var lightPos = [
@@ -518,6 +537,66 @@ var LittleBrother = (function () {
       };
 
     }, //Sequence
+
+    clearConsole: function () {
+      document.getElementById('console').value = '';
+    }, //clearConsole
+
+    pauseConsole: function (duration) {
+      consoleQueue = consoleQueue.concat('|WAIT'+duration+'|');
+    }, //pauseConsole
+
+    typeToConsole: function (message) {
+      message = '\n> ' + message;
+      consoleQueue = consoleQueue.concat(message);
+      function typeLetter() {
+        var con = document.getElementById('console');
+        if (consoleQueue.length > 0) {
+          if (consoleQueue.indexOf('|STARTBLOCK|') === 0) {
+            var end = consoleQueue.indexOf('|ENDBLOCK|');
+            con.value += consoleQueue.substring(12, end);
+            consoleQueue = consoleQueue.slice(end+10);
+            consoleTimeout = setTimeout(typeLetter, Math.random()*50+50);
+          }
+          else if (consoleQueue.indexOf('|WAIT') === 0) {
+            var end = consoleQueue.indexOf('|', 3);
+            var duration = parseInt(consoleQueue.substring(5, end));
+            consoleQueue = consoleQueue.slice(end+1);
+            consoleTimeout = setTimeout(typeLetter, duration);
+          }
+          else {
+            con.value += consoleQueue[0];
+            consoleQueue = consoleQueue.slice(1);
+            consoleTimeout = setTimeout(typeLetter, Math.random()*50+50);
+          } //if
+        } //if
+        con.scrollTop = con.scrollHeight;
+      } //function
+      if (consoleTimeout === undefined) {
+        typeLetter();
+      } //if
+    }, //typeToConsole
+
+    addToConsole: function (message) {
+      LittleBrother.typeToConsole('|STARTBLOCK|'+message+'|ENDBLOCK|');
+    }, //addToConsole
+
+    toggleConsole: function (state) {
+      var c = $('#console');
+      if (state) {
+        c.show();
+        c.animate({
+          bottom: 0,
+        }, 500);
+      }
+      else {
+        c.animate({
+          bottom: -c.height(),
+        }, 500, function () {
+          c.hide();
+        });
+      } //if
+    }, //toggleConsole
 
   };
 

@@ -2,6 +2,7 @@
 <html>
   <head>
     <link rel="stylesheet" href="css/style.css" type="text/css">
+    <script type="text/javascript" src="lib/jquery.js"></script>
 		<script src="lib/popcorn/popcorn.js"></script>
 		<script src="lib/popcorn/popcorn.baseplayer.js"></script>
 		<script src="lib/popcorn/popcorn.code.js"></script>
@@ -9,6 +10,7 @@
 		<script src="js/popcorn.littlebrother.js"></script>
     <script type="text/javascript" src="lib/cubicvr/CubicVR.js"></script>
     <script type="text/javascript" src="lib/cubicvr/AnimationKit.js"></script>
+    <script type="text/javascript" src="lib/bitFont.js"></script>
     <script type="text/javascript" src="lib/bitFont3D.js"></script>
     <script type="text/javascript" src="js/little-brother.js"></script>
     <script type="text/javascript" src="js/sequences/sequence1.js"></script>
@@ -50,14 +52,18 @@
           <p>
             <input type="button" id="editor-save-sequence" value="Save" />
             <input type="button" id="editor-show-sequence" value="Show" />
-            <!--<input type="button" id="editor-play-sequence" value="Play" />
-            <input type="button" id="editor-pause-sequence" value="Pause" />-->
           </p>
         </div>
       </p>
       <p>
         <h3></h3>
       </p>
+    </div>
+    <textarea id="console" readonly="readonly"></textarea>
+    <div id="player">
+      <input type="button" id="player-play" value="Play" />
+      <input type="button" id="player-pause" value="Pause" />
+      <input type="button" id="player-editor" value="Editor" />
     </div>
   </body>
 </html>

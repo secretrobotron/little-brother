@@ -19,8 +19,8 @@
         width    : {elem:'input', type:'number', label:'Width'},
         height   : {elem:'input', type:'number', label:'Heigt'},
         position : {elem:'input', type:'text', label:'Position'},
-        onStart  : {elem:'input', type:'text', label:'onStart'}
-        onEnd    : {elem:'input', type:'text', label:'onEnd'}
+        onStart  : {elem:'input', type:'text', label:'onStart'},
+        onEnd    : {elem:'input', type:'text', label:'onEnd'},
       }
     },
     _setup: function(options) {
