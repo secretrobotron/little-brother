@@ -28,7 +28,6 @@ var LittleBrother = (function () {
     m.setBehavior(CubicVR.enums.motion.POS, CubicVR.enums.motion.X, CubicVR.enums.envelope.behavior.CONSTANT, CubicVR.enums.envelope.behavior.CONSTANT);
     m.setBehavior(CubicVR.enums.motion.POS, CubicVR.enums.motion.Y, CubicVR.enums.envelope.behavior.CONSTANT, CubicVR.enums.envelope.behavior.CONSTANT);
     m.setBehavior(CubicVR.enums.motion.POS, CubicVR.enums.motion.Z, CubicVR.enums.envelope.behavior.CONSTANT, CubicVR.enums.envelope.behavior.CONSTANT);
-
   }; //setMotionTo
 
   function stopCurrentSequence () {
