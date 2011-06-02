@@ -3,9 +3,25 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
   font: 12pt Helvetica;
   color: #fff;
+}
+
+html {
+  overflow: hidden;
+}
+
+#main-canvas {
+  display: none;
+}
+
+.sequence-div {
+  z-index: 2000;
+  position: absolute;
+}
+
+.sequence-div canvas {
+  border: 5px solid #000;
 }
 
 #editor {
@@ -77,4 +93,5 @@ html, body {
   position: absolute;
   top: 5px;
   left: 5px;
+  z-index: 50000;
 }

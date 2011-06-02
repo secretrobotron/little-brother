@@ -143,6 +143,7 @@ LittleBrother.addSequence( (function () {
         start: 15,
         end: 25,
         onStart: function (options) {
+          /*
           var underscore = winstonObjs[0].children[winstonObjs[0].children.length-1];
           var underscorePosition = [underscore.position[0], underscore.position[1], underscore.position[2]];
           options.interval = setInterval(function(){
@@ -176,18 +177,19 @@ LittleBrother.addSequence( (function () {
             } //if
           }
           animKit.transition(currentTimer.getSeconds()+7, 15, 2, winstonObjs[1], "explode", "out");
+          */
         },
         onEnd: function (options) {
-          scene.removeSceneObject(winstonObjs[0]);
-          scene.removeSceneObject(winstonObjs[1]);
+          //scene.removeSceneObject(winstonObjs[0]);
+          //scene.removeSceneObject(winstonObjs[1]);
         },
       })
       .code({
         start: 20,
         end: 21,
         onStart: function (options) {
-          winstonObjs[1].visible = true;
-          winstonObjs[0].visible = false;
+          //winstonObjs[1].visible = true;
+          //winstonObjs[0].visible = false;
         },
       });
     },
@@ -196,6 +198,58 @@ LittleBrother.addSequence( (function () {
       var that = this;
       var panels = this.panels;
 
+      for (var i=0; i<this.panels.length; ++i) {
+        var p = this.panels[i];
+        (function (canvas) {
+          canvas.style.position = 'absolute';
+          canvas.style.top = p.position[0] + 'px';
+          canvas.style.left = p.position[1] + 'px';
+          $(canvas).draggable({
+            start: function (event, ui) {
+              if (event.ctrlKey || event.shiftKey) {
+                return false;
+              } //if
+            },
+          });
+          canvas.addEventListener('mousedown', function (e) {
+            if (e.shiftKey) {
+
+              var mouseDownPos = [e.pageX, e.pageY], 
+                  canvasSize = [0,0], 
+                  startPos = [0,0], 
+                  startDist = [0,0],
+                  ratio = 0;
+
+              function mouseUpHandler(ev) {
+                document.body.removeEventListener('mouseup', mouseUpHandler, false);
+                document.body.removeEventListener('mousemove', mouseMoveHandler, false);
+              }
+
+              function mouseMoveHandler(ev) {
+                var diff = [ev.pageX - startPos[0], ev.pageY - startPos[1]];
+                var dist = Math.sqrt(diff[0]*diff[0] + diff[1]*diff[1]);
+                canvas.style.width = canvasSize[0] + (-startDist + dist) + 'px';
+                canvas.style.height = canvasSize[1] + (-startDist + dist)/ratio + 'px';
+              }
+
+              canvasSize[0] = $(canvas).width();
+              canvasSize[1] = $(canvas).height();
+              ratio = canvasSize[0]/canvasSize[1];
+              var rect = canvas.getClientRects()[0];
+              startPos[0] = rect.left;
+              startPos[1] = rect.top;
+              var d = [mouseDownPos[0] - startPos[0], mouseDownPos[1] - startPos[1]];
+              startDist = Math.sqrt(d[0]*d[0] + d[1]*d[1]);
+
+              document.body.addEventListener('mouseup', mouseUpHandler, false);
+              document.body.addEventListener('mousemove', mouseMoveHandler, false);
+            } //if
+          }, false);
+          that.rootElement.appendChild(canvas);
+        })(p.sourceCanvas);
+      } //for
+
+      /*
       scene = options.scene;
       animKit = new AnimationKit();
 
@@ -239,20 +293,26 @@ LittleBrother.addSequence( (function () {
       winstonObjs[0].scale = [.5, .5, .5];
       winstonObjs[1] = bf3d.genString("winston");
       winstonObjs[1].scale = [.5, .5, .5];
+      */
 
     },
     show: function () {
-      scene.bindSceneObject(rootPanelObject); 
-      scene.setSkyBox(new CubicVR.SkyBox({texture:'assets/classroom-skybox.png'}));
+      //scene.bindSceneObject(rootPanelObject); 
+      //scene.setSkyBox(new CubicVR.SkyBox({texture:'assets/classroom-skybox.png'}));
+      document.body.appendChild(this.rootElement);
+    },
+    hide: function () {
+      document.body.removeChild(this.rootElement);
     },
     start: function (timer) {
       if (this.popcorn.currentTime() === 0) {
-        animKit.transition(timer.getSeconds(), 5, 1, rootPanelObject, "explode", "in");
+        //animKit.transition(timer.getSeconds(), 5, 1, rootPanelObject, "explode", "in");
       } //if
     },
     pause: function (timer) {
     },
     stop: function (timer) {
+      /*
       animKit.transition(timer.getSeconds(), 5, 1, rootPanelObject, "explode", "out");
       var panels = this.panels;
       timeout = setTimeout(function () { 
@@ -265,10 +325,12 @@ LittleBrother.addSequence( (function () {
           ];
         } //for
       }, 1000);
+      */
     }, 
     update: function (timer) {
     },
     updateGraphics: function (timer, gl) {
+      /*
       currentTimer = timer;
       var camPos = scene.camera.position;
       var camTar = scene.camera.target;
@@ -279,7 +341,7 @@ LittleBrother.addSequence( (function () {
 
       faceCamera(winstonObjs[0], camPos, camTar, ray, diff);
       faceCamera(winstonObjs[1], camPos, camTar, ray, diff);
-
+      */
     },
   });
 

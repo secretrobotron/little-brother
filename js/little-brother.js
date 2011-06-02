@@ -116,6 +116,7 @@ var LittleBrother = (function () {
     var canvas = document.createElement('canvas');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    canvas.id = "main-canvas";
           
     var gl = CubicVR.GLCore.init(canvas, 'lib/cubicvr/CubicVR_Core.vs', 'lib/cubicvr/CubicVR_Core.fs');
         
@@ -191,6 +192,7 @@ var LittleBrother = (function () {
     } //for
 
     scene = new CubicVR.Scene(canvas.width, canvas.height, 80, 0.01, 100);
+    CubicVR.addResizeable(scene);
 
     mvc = new CubicVR.MouseViewController(canvas, scene.camera);
 
@@ -313,6 +315,30 @@ var LittleBrother = (function () {
     } //for
 
     $('#console').hide();
+
+    (function () {
+      document.body.addEventListener('mousedown', function (e) {
+        if (e.ctrlKey && currentPlayingSequence) {
+          var mouseDownPos, divPos, div;
+          var mouseUpHandler = function (e) {
+            document.body.removeEventListener('mouseup', mouseUpHandler, false);
+            document.body.removeEventListener('mousemove', mouseMoveHandler, false);
+          };
+          var mouseMoveHandler = function (e) {
+            document.body.style.position = 'absolute';
+            var nx = e.pageX - mouseDownPos[0], ny = e.pageY - mouseDownPos[1];
+            div.style.top = divPos[1] + ny + 'px';
+            div.style.left = divPos[0] + nx + 'px';
+          };
+          mouseDownPos = [e.pageX, e.pageY];
+          div = currentPlayingSequence.rootElement;
+          divPos = $(div).position();
+          divPos = [divPos.left, divPos.top];
+          document.body.addEventListener('mouseup', mouseUpHandler, false);
+          document.body.addEventListener('mousemove', mouseMoveHandler, false);
+        } //if
+      }, false);
+    })();
     
   }, false); //DOM ready
 
@@ -360,12 +386,15 @@ var LittleBrother = (function () {
       this.scale = options.scale || [1,1,1];
 
       var mesh = new CubicVR.Mesh();
-      var image = new Image();
+      var image = this.sourceImage = new Image();
+      var that = this;
       var BORDER_WIDTH = 20;
+      var sourceCanvas = this.sourceCanvas = document.createElement('CANVAS');
       image.onload = function (e) {
         var w = image.width, h = image.height;
-        var texture = new CubicVR.CanvasTexture({width: w, height: h, update: function (canvas, ctx) {
+        var texture = new CubicVR.CanvasTexture({canvas: sourceCanvas, width: w, height: h, update: function (canvas, ctx) {
           ctx.drawImage(image, 0, 0);
+          /*
           ctx.lineWidth = BORDER_WIDTH;
           ctx.strokeStyle = "#000000";
           ctx.beginPath();
@@ -376,6 +405,7 @@ var LittleBrother = (function () {
           ctx.beginPath();
           ctx.rect(0, 0, w, h);
           ctx.stroke();
+          */
         }});
         CubicVR.primitives.plane( {
           mesh: mesh,
@@ -415,6 +445,9 @@ var LittleBrother = (function () {
 
       var that = this;
 
+      this.rootElement = document.createElement('DIV');
+      this.rootElement.className = 'sequence-div';
+
       this.name = options.name || 'Untitled';
       this.panels = [];
 
@@ -423,6 +456,9 @@ var LittleBrother = (function () {
       };
 
       this.options = options;
+
+      this.options.show = this.options.show || function (){};
+      this.options.hide = this.options.hide || function (){};
 
       this.addPanel = function (options) {
         var panel = new LittleBrother.Panel(options);
@@ -455,6 +491,10 @@ var LittleBrother = (function () {
       this.show = function () {
         that.options.show.apply(that);
       }; //show
+
+      this.hide = function () {
+        that.options.hide.apply(that);
+      };
 
       this.prepare = function (scene) {
         if (that.options.panels) {

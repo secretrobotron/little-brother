@@ -1,3 +1,6 @@
 [submodule "lib/butter"]
 	path = lib/butter
 	url = git://github.com/webmademovies/butter.git
+[submodule "lib/trackliner"]
+	path = lib/trackliner
+	url = git://github.com/secretrobotron/trackliner.git
