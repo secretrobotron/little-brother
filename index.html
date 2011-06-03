@@ -8,6 +8,7 @@
 		<script src="lib/popcorn/popcorn.baseplayer.js"></script>
 		<script src="lib/popcorn/popcorn.code.js"></script>
 		<script src="lib/popcorn/popcorn.code.js"></script>
+    <script src="lib/trackliner/trackliner.js"></script>
 		<script src="js/popcorn.littlebrother.js"></script>
     <script type="text/javascript" src="lib/cubicvr/CubicVR.js"></script>
     <script type="text/javascript" src="lib/cubicvr/AnimationKit.js"></script>
@@ -17,6 +18,7 @@
     <script type="text/javascript" src="js/sequences/sequence1.js"></script>
   </head>
   <body>
+    <div id="timeline"></div>
     <div id="editor">
       <h1>Editor</h1>
       <p>
@@ -39,8 +41,9 @@
                     <fieldset>
                       <legend>Panel</legend>
                       <ul>
-                        <li><label>Image:</label><input type="textbox" id="editor-sequence-panel-image" /></li>
-                        <li><label>Time:</label><input type="textbox" id="editor-sequence-panel-time" /></li>
+                        <!--<li><label>Image:</label><input type="textbox" id="editor-sequence-panel-image" /></li>-->
+                        <!--<li><label>Time:</label><input type="textbox" id="editor-sequence-panel-time" /></li>-->
+                        <li><input type="button" value="Add to Timeline" id="editor-panel-add-timeline"></li>
                       </ul>
                     </fieldset>
                   </p>
@@ -64,7 +67,8 @@
     <div id="player">
       <input type="button" id="player-play" value="Play" />
       <input type="button" id="player-pause" value="Pause" />
-      <input type="button" id="player-editor" value="Editor" />
+      <input type="button" id="editor-toggle" value="Editor" />
+      <input type="button" id="timeline-toggle" value="Timeline" />
     </div>
   </body>
 </html>

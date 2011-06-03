@@ -12,6 +12,16 @@ var LittleBrother = (function () {
 
   var consoleQueue = "", consoleTimeout;
 
+  var cssCamera = new (function () {
+    var that = this;
+    this.targetPosition = [0, 0];
+    this.position = [0, 0];
+    this.stepPosition = function () {
+      that.position[0] -= (that.position[0] - that.targetPosition[0])*.35;
+      that.position[1] -= (that.position[1] - that.targetPosition[1])*.35;
+    };
+  })();
+
   /******************************************************************************
    * Internal LB Functions
    ******************************************************************************/
@@ -112,6 +122,26 @@ var LittleBrother = (function () {
    * DOM Ready
    ******************************************************************************/
   document.addEventListener( 'DOMContentLoaded', function (e) {
+
+    TrackLiner.plugin('little-brother', {
+      setup: function (trackObj, options) {
+        var left = options.left || options.x || options.start || 0;
+        var width = options.width || options.end ? options.end - left : 1;
+        return {
+          left: left,
+          width: width,
+          innerHTML: options.image || '',
+        };
+
+      },
+      click: function (eventObj, event, ui) {
+      },
+      dblclick: function (eventObj, event, ui) {
+        currentEditingSequence.focusOnPanel(eventObj.options.panel);
+      },
+      moved: function (eventObj, event, ui) {
+      },
+    });
 
     var canvas = document.createElement('canvas');
     canvas.width = window.innerWidth;
@@ -277,6 +307,18 @@ var LittleBrother = (function () {
     //document.getElementById('editor-sequence-panels').addEventListener('dblclick', function (e) {
     //}, false);
 
+    document.getElementById('editor-panel-add-timeline').addEventListener('click', function (e) {
+      var sequence = currentEditingSequence;
+      sequence.tracks['css-camera-' + Math.round(Math.random()*2)].createTrackEvent('little-brother', {
+        start: 0, 
+        end: 10
+      });
+      sequence.popcorn.littlebrother({
+        start: 0,
+        end: 10,
+      });
+    }, false);
+
     document.getElementById('editor-save-sequence').addEventListener('click', function (e) {
       saveEditingSequence();
     }, false);
@@ -300,8 +342,18 @@ var LittleBrother = (function () {
       } //if
     }, false);
 
-    document.getElementById('player-editor').addEventListener('click', function (e) {
+    document.getElementById('editor-toggle').addEventListener('click', function (e) {
       var editor = document.getElementById('editor');
+      if (editor.style.display === 'none' || editor.style.display === '') {
+        editor.style.display = 'block';
+      }
+      else {
+        editor.style.display = 'none';
+      } //if
+    }, false);
+
+    document.getElementById('timeline-toggle').addEventListener('click', function (e) {
+      var editor = document.getElementById('timeline');
       if (editor.style.display === 'none' || editor.style.display === '') {
         editor.style.display = 'block';
       }
@@ -319,27 +371,47 @@ var LittleBrother = (function () {
     (function () {
       document.body.addEventListener('mousedown', function (e) {
         if (e.ctrlKey && currentPlayingSequence) {
-          var mouseDownPos, divPos, div;
+          var mouseDownPos, startPos, div;
           var mouseUpHandler = function (e) {
             document.body.removeEventListener('mouseup', mouseUpHandler, false);
             document.body.removeEventListener('mousemove', mouseMoveHandler, false);
           };
           var mouseMoveHandler = function (e) {
-            document.body.style.position = 'absolute';
             var nx = e.pageX - mouseDownPos[0], ny = e.pageY - mouseDownPos[1];
-            div.style.top = divPos[1] + ny + 'px';
-            div.style.left = divPos[0] + nx + 'px';
+            cssCamera.targetPosition = [startPos[0] + nx, startPos[1] + ny];
           };
           mouseDownPos = [e.pageX, e.pageY];
           div = currentPlayingSequence.rootElement;
-          divPos = $(div).position();
-          divPos = [divPos.left, divPos.top];
+          startPos = [cssCamera.position[0], cssCamera.position[1]];
           document.body.addEventListener('mouseup', mouseUpHandler, false);
           document.body.addEventListener('mousemove', mouseMoveHandler, false);
         } //if
       }, false);
     })();
-    
+
+    toggleEditorProperties(true);
+    setupEditorProperties(sequences[0]);
+    LittleBrother.showSequence(sequences[0]);
+
+    // shim layer with setTimeout fallback
+    window.requestAnimFrame = (function(){
+      return  window.requestAnimationFrame       || 
+              window.webkitRequestAnimationFrame || 
+              window.mozRequestAnimationFrame    || 
+              window.oRequestAnimationFrame      || 
+              window.msRequestAnimationFrame     || 
+              function(callback, element){
+                window.setTimeout(callback, 1000 / 60);
+              };
+    })();
+ 
+    (function animloop(){
+      cssCamera.stepPosition();
+      requestAnimFrame(animloop);
+      currentEditingSequence.rootElement.style.left = cssCamera.position[0] + "px";
+      currentEditingSequence.rootElement.style.top = cssCamera.position[1] + "px";
+    })(); 
+ 
   }, false); //DOM ready
 
   /******************************************************************************
@@ -392,6 +464,8 @@ var LittleBrother = (function () {
       var sourceCanvas = this.sourceCanvas = document.createElement('CANVAS');
       image.onload = function (e) {
         var w = image.width, h = image.height;
+        that.width = w;
+        that.height = h;
         var texture = new CubicVR.CanvasTexture({canvas: sourceCanvas, width: w, height: h, update: function (canvas, ctx) {
           ctx.drawImage(image, 0, 0);
           /*
@@ -463,22 +537,41 @@ var LittleBrother = (function () {
       this.addPanel = function (options) {
         var panel = new LittleBrother.Panel(options);
         this.panels.push(panel);
+        return panel;
       }; //addPanel
 
+      var tracks = this.tracks = {};
+
       this.addAudio = function (audio) {
+
         var audioElement = this.audioElement = document.createElement('AUDIO');
         var audioSource = document.createElement('SOURCE');
         audioSource.src = audio;
         audioElement.appendChild(audioSource);
         audioElement.setAttribute('controls', true);
-        this.popcorn = Popcorn(audioElement);
-        this.popcorn.listen('play', function () {
+
+        var popcorn = this.popcorn = Popcorn(audioElement);
+
+        popcorn.listen('play', function () {
           LittleBrother.showSequence(that);
           that.options.start.apply(that, [mainLoop.timer]);
         });
-        this.popcorn.listen('pause', function () {
+
+        popcorn.listen('pause', function () {
           that.options.pause.apply(that, [mainLoop.timer]);
         });
+
+        this.popcorn.listen('loadedmetadata', function (e) {
+          var trackliner = new TrackLiner({
+            element: 'timeline',
+            scale: 10,
+            duration: popcorn.duration(),
+          });
+          tracks['css-camera-0'] = trackliner.createTrack('CSS Camera 0');
+          tracks['css-camera-1'] = trackliner.createTrack('CSS Camera 1');
+          tracks['css-camera-2'] = trackliner.createTrack('CSS Camera 2');
+        });
+
       }; //addAudio
 
       this.update = that.options.update || function () {};
@@ -496,6 +589,10 @@ var LittleBrother = (function () {
         that.options.hide.apply(that);
       };
 
+      this.createTrackEvent = function (track, options) {
+        this.tracks[track].createTrackEvent('little-brother', options);
+      };
+
       this.prepare = function (scene) {
         if (that.options.panels) {
           for (var i=0; i<that.options.panels.length; ++i) {
@@ -507,7 +604,8 @@ var LittleBrother = (function () {
           var trackEvents = this.popcorn.getTrackEvents();
           for (var i=0; i<trackEvents.length; ++i) {
             if (trackEvents[i]._id.indexOf('littlebrother') > -1) {
-              that.addPanel(trackEvents[i]);
+              trackEvents[i].panel = that.addPanel(trackEvents[i]);
+              that.createTrackEvent('css-camera-' + Math.round(Math.random() * 2), trackEvents[i]);
             } //if
           } //for
         } //if
@@ -530,6 +628,24 @@ var LittleBrother = (function () {
         that.update();
       });
 
+      this.sortPanels = function (panel) {
+        for (var i=0; i<that.panels.length; ++i) {
+          that.panels[i].sourceCanvas.style.zIndex = 8000;
+        } //for
+        panel.sourceCanvas.style.zIndex = 9000;
+      };
+
+      this.focusOnPanel = function (panel, offset) {
+        offset = offset || [0,0,0];
+        cssCamera.targetPosition = [
+          -panel.position[0],
+          -panel.position[1],
+        ];
+        console.log(cssCamera.targetPosition);
+        that.sortPanels(panel);
+      };
+
+      /*
       this.focusOnPanel = function (panel, offset) {
         offset = offset || [0,0,0];
         var sec = mainLoop.timer.getSeconds();
@@ -574,6 +690,7 @@ var LittleBrother = (function () {
         setMotionTo(mainLightTarget, lightTar, sec, 2);
         setMotionTo(cameraTarget, adj, sec, 1);
       };
+      */
 
     }, //Sequence
 

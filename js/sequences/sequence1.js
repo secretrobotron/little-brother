@@ -23,6 +23,7 @@ LittleBrother.addSequence( (function () {
         image: 'assets/seq1/storyboard0000.png',
         position: [1, 2, 0],
         start: 2,
+        end: 13,
         onStart: function (options) {
         },
         onEnd: function (options) {
@@ -32,88 +33,103 @@ LittleBrother.addSequence( (function () {
         image: 'assets/seq1/storyboard0001.png',
         position: [0, 2, 0],
         start: 14,
+        end: 19,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0002.png',
         position: [0, 1, 0],
         start: 20,
+        end: 22,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0003a.png',
         position: [0, 0, 0],
         start: 23,
+        end: 24,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0003b.png',
         position: [-.5, 0, .5],
         rotation: [0, 90, 0],
         start: 25,
+        end: 26,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0004.png',
         position: [-.5, 0, 1.5],
         rotation: [0, 90, 0],
         start: 27,
+        end: 73,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0005.png',
         position: [-.5, 0, 2.5],
         rotation: [0, 90, 0],
         start: 74,
+        end: 75,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0006.png',
         position: [-.5, -1, 2.5],
         rotation: [0, 90, 0],
         start: 76,
+        end: 77,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0008.png',
         position: [-.5, -2, 2.5],
         rotation: [0, 90, 0],
         start: 78,
+        end: 79,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0009.png',
         position: [-.5, -2, 1.5],
         rotation: [0, 90, 0],
         start: 80,
+        end: 81,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0010.png',
         position: [-.5, -2, .5],
         rotation: [0, 90, 0],
         start: 82,
+        end: 83,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0011.png',
         position: [-.5, -2, -.5],
         rotation: [0, 90, 0],
         start: 84,
+        end: 85,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0012.png',
         position: [-.49, -2, -.5],
         rotation: [0, -90, 0],
         start: 86,
+        end: 87,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0013.png',
         position: [-.49, -2, .5],
         rotation: [0, -90, 0],
         start: 88,
+        end: 89,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0014.png',
         position: [-.49, -2, 1.5],
         rotation: [0, -90, 0],
         start: 90,
+        end: 91,
       })
       .littlebrother({
         image: 'assets/seq1/storyboard0015.png',
         position: [0, -2, 2],
         rotation: [0, 0, 0],
         start: 92,
+        end: 93,
       })
       .code({
         start: 13,
@@ -200,7 +216,7 @@ LittleBrother.addSequence( (function () {
 
       for (var i=0; i<this.panels.length; ++i) {
         var p = this.panels[i];
-        (function (canvas) {
+        (function (panel, canvas) {
           canvas.style.position = 'absolute';
           canvas.style.top = p.position[0] + 'px';
           canvas.style.left = p.position[1] + 'px';
@@ -209,6 +225,11 @@ LittleBrother.addSequence( (function () {
               if (event.ctrlKey || event.shiftKey) {
                 return false;
               } //if
+              that.sortPanels(panel);
+            },
+            stop: function (event, ui) {
+              panel.position = [canvas.offsetLeft, canvas.offsetTop, 0];
+              console.log('panel', panel.position);
             },
           });
           canvas.addEventListener('mousedown', function (e) {
@@ -223,6 +244,8 @@ LittleBrother.addSequence( (function () {
               function mouseUpHandler(ev) {
                 document.body.removeEventListener('mouseup', mouseUpHandler, false);
                 document.body.removeEventListener('mousemove', mouseMoveHandler, false);
+                panel.width = $(canvas).width();
+                panel.height = $(canvas).height();
               }
 
               function mouseMoveHandler(ev) {
@@ -245,8 +268,11 @@ LittleBrother.addSequence( (function () {
               document.body.addEventListener('mousemove', mouseMoveHandler, false);
             } //if
           }, false);
+          canvas.addEventListener('dblclick', function (e) {
+            that.focusOnPanel(panel);
+          }, false);
           that.rootElement.appendChild(canvas);
-        })(p.sourceCanvas);
+        })(p, p.sourceCanvas);
       } //for
 
       /*

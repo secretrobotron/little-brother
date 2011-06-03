@@ -33,7 +33,20 @@ html {
   top: 0px;
   background: rgba(64, 64, 64, .5);
   padding: 2px;
-  display: none;
+  z-index: 11000;
+}
+
+#timeline {
+  width: 100%;
+  height: 150px;
+  min-height: 150px;
+  background: rgba(64, 64, 64, .5);
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  overflow: scroll;
+  max-width: 100%;
+  z-index: 10000;
 }
 
 #editor-sequences {
