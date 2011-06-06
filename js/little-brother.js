@@ -131,15 +131,23 @@ var LittleBrother = (function () {
           left: left,
           width: width,
           innerHTML: options.image || '',
+          className: 'editor-track-event',
         };
 
       },
       click: function (eventObj, event, ui) {
+        eventObj.select();
       },
       dblclick: function (eventObj, event, ui) {
         currentEditingSequence.focusOnPanel(eventObj.options.panel);
       },
       moved: function (eventObj, event, ui) {
+      },
+      select: function (eventObj, event) {
+        eventObj.element.style.background = "-moz-linear-gradient(top,  #00f,  #006)";
+      },
+      deselect: function (eventObj, event) {
+        eventObj.element.style.background = "-moz-linear-gradient(top,  #ff0,  #660)";
       },
     });
 
@@ -271,6 +279,7 @@ var LittleBrother = (function () {
     CubicVR.setGlobalAmbient([0.2, 0.2, 0.2]);
     //CubicVR.setGlobalDepthAlpha(true, scene.camera.nearclip, scene.camera.farclip);
 
+    /*
     mainLoop = new CubicVR.MainLoop( function (timer, gl) {
 
       mainLight.lookat(mainLightTarget.position);
@@ -289,6 +298,7 @@ var LittleBrother = (function () {
       fxChain.render();
 
     });
+    */
 
     document.body.appendChild(canvas);
 
@@ -500,6 +510,8 @@ var LittleBrother = (function () {
         }).triangulateQuads().compile().clean();
 
         texture.update();
+        sourceCanvas.style.width = w/2 + 'px';
+        sourceCanvas.style.height = h/2 + 'px';
       };
       image.src = options.image;
 
@@ -641,7 +653,6 @@ var LittleBrother = (function () {
           -panel.position[0],
           -panel.position[1],
         ];
-        console.log(cssCamera.targetPosition);
         that.sortPanels(panel);
       };
 

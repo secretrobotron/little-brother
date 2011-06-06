@@ -229,7 +229,6 @@ LittleBrother.addSequence( (function () {
             },
             stop: function (event, ui) {
               panel.position = [canvas.offsetLeft, canvas.offsetTop, 0];
-              console.log('panel', panel.position);
             },
           });
           canvas.addEventListener('mousedown', function (e) {
