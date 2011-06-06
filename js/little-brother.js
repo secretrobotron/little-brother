@@ -135,18 +135,24 @@ var LittleBrother = (function () {
         };
 
       },
-      click: function (eventObj, event, ui) {
+      click: function (track, eventObj, event, ui) {
         eventObj.select();
       },
-      dblclick: function (eventObj, event, ui) {
+      dblclick: function (track, eventObj, event, ui) {
         currentEditingSequence.focusOnPanel(eventObj.options.panel);
       },
-      moved: function (eventObj, event, ui) {
+      moved: function (track, eventObj, event, ui) {
+        var panel = eventObj.options.panel;
+        var sequence = eventObj.options.sequence;
+        panel.start = eventObj.start;
+        panel.end = eventObj.end;
+        sequence.removePopcornEvent(panel);
+        sequence.generatePopcornEvent(panel);
       },
-      select: function (eventObj, event) {
+      select: function (track, eventObj, event) {
         eventObj.element.style.background = "-moz-linear-gradient(top,  #00f,  #006)";
       },
-      deselect: function (eventObj, event) {
+      deselect: function (track, eventObj, event) {
         eventObj.element.style.background = "-moz-linear-gradient(top,  #ff0,  #660)";
       },
     });
@@ -463,6 +469,7 @@ var LittleBrother = (function () {
     Panel: function (options) {
       this.image = options.image;
       this.start = options.start;
+      this.end = options.end;
       this.position = options.position || [0,0,0];
       this.rotation = options.rotation || [0,0,0];
       this.scale = options.scale || [1,1,1];
@@ -522,6 +529,8 @@ var LittleBrother = (function () {
       so.rotation = [this.rotation[0], this.rotation[1], this.rotation[2]];
       so.scale = [this.scale[0], this.scale[1], this.scale[2]];
       this.originalPosition = [this.position[0], this.position[1], this.position[2]];
+
+    
     }, //Panel
 
     /*******************************
@@ -566,11 +575,11 @@ var LittleBrother = (function () {
 
         popcorn.listen('play', function () {
           LittleBrother.showSequence(that);
-          that.options.start.apply(that, [mainLoop.timer]);
+          that.options.start.apply(that, [/*mainLoop.timer*/]);
         });
 
         popcorn.listen('pause', function () {
-          that.options.pause.apply(that, [mainLoop.timer]);
+          that.options.pause.apply(that, [/*mainLoop.timer*/]);
         });
 
         this.popcorn.listen('loadedmetadata', function (e) {
@@ -616,8 +625,11 @@ var LittleBrother = (function () {
           var trackEvents = this.popcorn.getTrackEvents();
           for (var i=0; i<trackEvents.length; ++i) {
             if (trackEvents[i]._id.indexOf('littlebrother') > -1) {
+              var trackName = 'css-camera-' + Math.round(Math.random() * 2);
               trackEvents[i].panel = that.addPanel(trackEvents[i]);
-              that.createTrackEvent('css-camera-' + Math.round(Math.random() * 2), trackEvents[i]);
+              trackEvents[i].track = that.tracks[trackName];
+              trackEvents[i].sequence = that;
+              that.createTrackEvent(trackName, trackEvents[i]);
             } //if
           } //for
         } //if
@@ -655,6 +667,23 @@ var LittleBrother = (function () {
         ];
         that.sortPanels(panel);
       };
+
+      this.removePopcornEvent = function (panel) {
+        that.popcorn.removeTrackEvent(panel.popcornTrackEventId);
+      };
+
+      this.generatePopcornEvent = function (panel) {
+        that.popcorn.code({
+          start: panel.start,
+          end: panel.end,
+          onStart: function (options) {
+            that.focusOnPanel(panel);
+          },
+        });
+
+        panel.popcornTrackEventId = that.popcorn.getLastTrackEventId();
+      };
+
 
       /*
       this.focusOnPanel = function (panel, offset) {

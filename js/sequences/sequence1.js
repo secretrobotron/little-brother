@@ -283,23 +283,13 @@ LittleBrother.addSequence( (function () {
         rootPanelObject.bindChild(panels[i].sceneObject);
       } //for
       rootPanelObject.position = [0, 0, 1];
+      */
 
       for (var i=0; i<panels.length; ++i)  {
-        (function (panel) {
-          that.popcorn.code({
-            start: panel.start,
-            end: panel.start+1,
-            onStart: function (options) {
-              that.focusOnPanel(panel, [
-                rootPanelObject.position[0],
-                rootPanelObject.position[1],
-                rootPanelObject.position[2],
-              ]);
-            },
-          });
-        })(panels[i]);
+        this.generatePopcornEvent(panels[i]);
       } //for
 
+      /*
       bfMaterial = new CubicVR.Material({
         color: [0.8,0.3,0.2],
         specular: [1, 5, 0],
