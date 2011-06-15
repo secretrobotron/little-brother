@@ -1,6 +1,6 @@
-[submodule "lib/butter"]
-	path = lib/butter
-	url = git://github.com/webmademovies/butter.git
-[submodule "lib/trackliner"]
-	path = lib/trackliner
+[submodule "external/trackliner"]
+	path = external/trackliner
 	url = git://github.com/secretrobotron/trackliner.git
+[submodule "external/popcorn-js"]
+	path = external/popcorn-js
+	url = https://github.com/webmademovies/popcorn-js
