@@ -4,3 +4,6 @@
 [submodule "external/popcorn-js"]
 	path = external/popcorn-js
 	url = https://github.com/webmademovies/popcorn-js
+[submodule "external/butter"]
+	path = external/butter
+	url = git://github.com/webmademovies/butter.git

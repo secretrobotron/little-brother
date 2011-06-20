@@ -3,7 +3,7 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font: 12pt Helvetica;
+  font: 10pt Helvetica;
   color: #fff;
 }
 
@@ -16,7 +16,7 @@ html {
 }
 
 .sequence-div {
-  z-index: 2000;
+  z-index: 200;
   position: absolute;
 }
 
@@ -25,19 +25,28 @@ html {
 }
 
 #editor {
-  width: 300px;
-  height: 100%;
-  min-height: 100%;
-  position: absolute;
-  right: 0px;
-  top: 0px;
-  background: rgba(64, 64, 64, .5);
+  width: 350px;
+  height: 700px;
   padding: 2px;
-  z-index: 11000;
+  z-index: 600;
+  font-size: 70%;
 }
 
-#timeline {
-  width: 100%;
+#timeline-playhead {
+  height: 100%;
+  width: 4px;
+  padding: 0;
+  margin: 0;
+  background-color: #000;
+  z-index: 550;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  cursor: col-resize;
+  opacity: .8;
+}
+
+#timeline-container {
   height: 150px;
   min-height: 150px;
   background: rgba(64, 64, 64, .5);
@@ -45,13 +54,24 @@ html {
   bottom: 0px;
   left: 0px;
   overflow: scroll;
+  z-index: 500;
+  color: #000;
   max-width: 100%;
-  z-index: 10000;
+  width: 100%;
 }
 
-.editor-track-event {
+#timeline {
+}
+
+.track-event {
   color: #000;
-  font-size: 10pt;
+  font-size: 8pt;
+}
+
+.track-event-selected {
+  color: #fff;
+  background: -moz-linear-gradient(top,  #00f,  #006);
+  background: -webkit-gradient(linear, left top, left bottom, from(#00f), to(#006));
 }
 
 #editor-sequences {
@@ -77,7 +97,7 @@ html {
 #editor span {
 }
 
-#editor fieldset input {
+#editor fieldset input[type="text"] {
   float: right;
   width: 200px;
 }
@@ -87,29 +107,51 @@ html {
   width: 180px;
 }
 
-#editor p p {
-  clear: both;
-}
-
 #editor fieldset {
   border: 1px solid #333;
-}
-
-#console {
-  position: absolute;
-  bottom: 0;
-  height: 30%;
-  min-height: 30%;
-  width: 100%;
-  min-width: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  border: 0;
-  color: #fff;
+  margin-top: 5px;
 }
 
 #player {
   position: absolute;
   top: 5px;
   left: 5px;
-  z-index: 50000;
+  z-index: 400;
+}
+
+#add-panel-images {
+  width: 680px;
+  height: 300px;
+  overflow-y: scroll;
+}
+
+.add-panel-image {
+  border: 1px solid #000;
+  margin: 2px;
+  height: 165px;
+  position: relative;
+}
+
+.add-panel-image img {
+  width: 150px;
+  height: 150px;
+  float: left;
+  border: 1px solid #000;
+  margin: 5px;
+}
+
+.add-panel-image span {
+  font-weight: bold;
+  z-index: +1;
+}
+
+#add-panel-images .ui-selecting { background: #FECA40; }
+#add-panel-images .ui-selected { background: #F39814; }
+
+.droppable {
+  cursor: pointer;
+}
+
+.small-val {
+  width: 20px;
 }

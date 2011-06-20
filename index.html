@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <link rel="stylesheet" href="lib/trackliner/trackliner.css" type="text/css">
     <link rel="stylesheet" href="lib/jquery/jquery-ui.css" type="text/css">
+    <link rel="stylesheet" href="css/style.css" type="text/css">
     <script type="text/javascript" src="lib/jquery/jquery.js"></script>
     <script type="text/javascript" src="lib/jquery/jquery-ui.js"></script>
 		<script src="lib/popcorn/popcorn.js"></script>
 		<script src="lib/popcorn/popcorn.baseplayer.js"></script>
-		<script src="lib/popcorn/popcorn.code.js"></script>
 		<script src="lib/popcorn/popcorn.code.js"></script>
     <script src="lib/trackliner/trackliner.js"></script>
 		<script src="js/popcorn.littlebrother.js"></script>
@@ -19,57 +19,92 @@
     <script type="text/javascript" src="js/sequences/sequence1.js"></script>
   </head>
   <body>
-    <div id="timeline"></div>
-    <div id="editor">
-      <h1>Editor</h1>
-      <p>
-        <h2>Sequences</h2>
-        <p>
-          <select id="editor-sequences" size="4">
-          </select>
-        </p>
-        <div id="editor-properties">
-          <p>
-            <fieldset>
-              <legend>Properties</legend>
-              <ul>
-                <li><label>Name:</label><input type="textbox" id="editor-sequence-name" /></li>
-                <li>
-                  <label>Panels:</label>
-                  <select id="editor-sequence-panels" size="6">
-                  </select>
-                  <p>
-                    <fieldset>
-                      <legend>Panel</legend>
-                      <ul>
-                        <!--<li><label>Image:</label><input type="textbox" id="editor-sequence-panel-image" /></li>-->
-                        <!--<li><label>Time:</label><input type="textbox" id="editor-sequence-panel-time" /></li>-->
-                        <li><input type="button" value="Add to Timeline" id="editor-panel-add-timeline"></li>
-                      </ul>
-                    </fieldset>
-                  </p>
-                </li>
-              </ul>
-            </fieldset>
-          </p>
-          <p id="editor-sequence-audio">
-          </p>
-          <p>
-            <input type="button" id="editor-save-sequence" value="Save" />
-            <input type="button" id="editor-show-sequence" value="Show" />
-          </p>
-        </div>
-      </p>
-      <p>
-        <h3></h3>
-      </p>
+
+    <div id="timeline-container">
+      <div id="timeline"></div>
+      <div id="timeline-playhead"></div>
     </div>
-    <textarea id="console" readonly="readonly"></textarea>
+
+    <div id="editor">
+
+      <fieldset>
+        <legend>Sequences</legend>
+        <select id="editor-sequences" size="4">
+        </select>
+      </fieldset>
+
+      <div id="editor-properties">
+
+        <fieldset>
+          <legend>Sequence Properties</legend>
+          <ul>
+
+            <li><label>Name:</label><input type="textbox" id="editor-sequence-name" /></li>
+
+            <li>
+              <label>Panels:</label>
+              <select id="editor-sequence-panels" size="6">
+              </select>
+
+              <fieldset>
+                <legend>Panel</legend>
+                <input type="button" value="Remove" id="editor-panel-remove" />
+
+                <span class="droppable" id="editor-panel-droppable" data-trackliner-type="little-brother-panel">Timeline Event</span>
+
+              </fieldset>
+
+            </li>
+
+            <li>
+              <input type="button" value="Add Panel" id="editor-add-panel" />
+              <input type="button" id="editor-save-sequence" value="Save" style="float: right"/>
+              <input type="button" id="editor-show-sequence" value="Show" style="float: right"/>
+            </li>
+
+          </ul>
+        </fieldset>
+
+        <fieldset>
+          <legend>Camera</legend>
+          <p id="editor-camera">
+            <span class="droppable" id="editor-camera-droppable" data-trackliner-type="little-brother-camera">Camera Event</span>
+          </p>
+        </fieldset>
+
+        <p id="editor-sequence-audio">
+        </p>
+
+      </div>
+
+    </div>
+
     <div id="player">
       <input type="button" id="player-play" value="Play" />
       <input type="button" id="player-pause" value="Pause" />
       <input type="button" id="editor-toggle" value="Editor" />
       <input type="button" id="timeline-toggle" value="Timeline" />
     </div>
+
+    <div id="add-panel-dialog">
+      <div id="add-panel-images">
+      </div>
+    </div>
+
+    <div id="add-camera-dialog">
+      <fieldset>
+        <legend>Start</legend>
+        <input type="text" class="small-val" value="0" id="add-camera-start-x" />
+        <input type="text" class="small-val" value="0" id="add-camera-start-y" />
+        <input type="button" value="Get Camera Position" id="add-camera-start-get-pos" />
+      </fieldset>
+      <fieldset>
+        <legend>End</legend>
+        <input type="text" class="small-val" value="0" id="add-camera-end-x" />
+        <input type="text" class="small-val" value="0" id="add-camera-end-y" />
+        <input type="button" value="Get Camera Position" id="add-camera-end-get-pos" />
+      </fieldset>
+    </div>
+
   </body>
 </html>
