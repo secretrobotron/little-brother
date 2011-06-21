@@ -37,12 +37,14 @@ var LittleBrother = (function () {
     m.setBehavior(CubicVR.enums.motion.POS, CubicVR.enums.motion.Z, CubicVR.enums.envelope.behavior.CONSTANT, CubicVR.enums.envelope.behavior.CONSTANT);
   }; //setMotionTo
 
-  var editMode = false;
-  function enterEditMode () {
+  var editMode = false,
+      editingObject = undefined;
+  function enterEditMode (object) {
     $('#editor').dialog('close');
     $('#editor').hide();
     $('#timeline-container').hide();
     $('#player').hide();
+    editingObject = object;
   } //enterModalMode
 
   function exitEditMode () {
@@ -50,6 +52,7 @@ var LittleBrother = (function () {
     $('#editor').show();
     $('#timeline-container').show();
     $('#player').show();
+    editingObject = undefined;
   } //exitModalMode
 
   function stopCurrentSequence () {
@@ -233,35 +236,151 @@ var LittleBrother = (function () {
     /* -------------------------------------------------------------------------
      * Trackliner Plugins
      */
-    TrackLiner.plugin('little-brother-panel', {
-      setup: function (trackObj, options) {
-        var index = editorProperties.panels.selectedIndex;
-        var option = editorProperties.panels.options[index];
-        var left = options.left || options.x || options.start || 0;
-        var width = options.width || options.end ? options.end - left : 10;
-        options.panel = option.panel;
-        return {
-          left: left,
-          width: width,
-          innerHTML: option.value || '',
-          classes: ['track-event'],
-        };
-      },
-      click: function (track, eventObj, event, ui) {
-        eventObj.select();
-      },
-      dblclick: function (track, eventObj, event, ui) {
-        currentSequence.focusOnPanel(eventObj.options.panel);
-      },
-      moved: function (track, eventObj, event, ui) {
-      },
-      select: function (track, eventObj, event) {
-        $(eventObj.element).addClass('track-event-selected');
-      },
-      deselect: function (track, eventObj, event) {
-        $(eventObj.element).removeClass('track-event-selected');
-      },
-    });
+
+    (function () {
+      $('#add-panel-event-dialog').dialog({
+        autoOpen: false,
+        modal: false,
+        height: 500,
+        width: 500,
+        title: 'Edit Panel Event',
+        open: function (e, ui) {
+        },
+        close: function (e, ui) {
+          exitEditMode();
+        },
+      });
+
+      $('#add-panel-start-get-attrs').click( function (e) {
+        $('#add-panel-start-x').val($(editingObject).position().left);
+        $('#add-panel-start-y').val($(editingObject).position().top);
+        $('#add-panel-start-width').val($(editingObject).width());
+        $('#add-panel-start-height').val($(editingObject).height());
+      });
+
+      $('#add-panel-end-get-attrs').click( function (e) {
+        $('#add-panel-end-x').val($(editingObject).position().left);
+        $('#add-panel-end-y').val($(editingObject).position().top);
+        $('#add-panel-end-width').val($(editingObject).width());
+        $('#add-panel-end-height').val($(editingObject).height());
+      });
+
+      function makePopcorn(object, start, end, startPos, endPos, startDims, endDims) {
+        var duration = end - start;
+        var popcorn = currentSequence.popcorn;
+        popcorn.code({
+          start: start,
+          end: end,
+          onStart: function (options) {
+            $(object).css({
+              left: startPos[0] + 'px',
+              top: startPos[1] + 'px',
+              width: startDims[0] + 'px',
+              height: startDims[1] + 'px',
+            });
+          },
+          onFrame: function (options) {
+            var time = popcorn.media.currentTime,
+                p = Math.min(1, Math.max(0, (time - start)/(end-start))),
+                pos = [],
+                dim = [];
+            pos[0] = startPos[0] + (endPos[0] - startPos[0])*p;
+            pos[1] = startPos[1] + (endPos[1] - startPos[1])*p;
+            dim[0] = startDims[0] + (endDims[0] - startDims[0])*p;
+            dim[1] = startDims[1] + (endDims[1] - startDims[1])*p;
+            $(object).css({
+              left: pos[0] + 'px',
+              top: pos[1] + 'px',
+              width: dim[0] + 'px',
+              height: dim[1] + 'px',
+            });
+          },
+          onEnd: function (options) {
+            var time = popcorn.media.currentTime,
+                pos = Math.min(1, Math.max(0, (time - start)/(end-start))) < 0.5 ? startPos : endPos,
+                dim = Math.min(1, Math.max(0, (time - start)/(end-start))) < 0.5 ? startDims : endDims;
+            $(object).css({
+              left: pos[0] + 'px',
+              top: pos[1] + 'px',
+              width: dim[0] + 'px',
+              height: dim[1] + 'px',
+            });
+          },
+        });
+        return popcorn.getTrackEvent(popcorn.getLastTrackEventId());
+      } //makePopcorn
+
+      TrackLiner.plugin('little-brother-panel', {
+        setup: function (trackObj, options) {
+          var index = editorProperties.panels.selectedIndex;
+          var option = editorProperties.panels.options[index];
+          var left = options.left || options.x || options.start || 0;
+          var width = options.width || options.end ? options.end - left : 10;
+          options.panel = option.panel;
+          options.startPos = [0,0];
+          options.endPos = [0,0];
+          options.startDims = [options.panel.canvas.width/2, options.panel.canvas.height/2];
+          options.endDims = [options.panel.canvas.width/2, options.panel.canvas.height/2];
+
+          options.popcorn = makePopcorn(options.panel.canvas, left, left+width, options.startPos, options.endPos, options.startDims, options.endDims);
+          return {
+            left: left,
+            width: width,
+            innerHTML: 'p: 0,0 &rarr; 0,0<br />d: 0,0 &rarr; 0,0',
+            classes: ['track-event'],
+          };
+        },
+        click: function (track, eventObj, event, ui) {
+          eventObj.select();
+        },
+        dblclick: function (track, eventObj, event, ui) {
+          var options = eventObj.options;
+          options.popcorn._natives.end(event, options.popcorn);
+          currentSequence.focusOnPanel(eventObj.options.panel);
+          enterEditMode(eventObj.options.panel.canvas);
+          $('#add-panel-start-x').val(options.startPos[0]);
+          $('#add-panel-start-y').val(options.startPos[1]);
+          $('#add-panel-end-x').val(options.endPos[0]);
+          $('#add-panel-end-y').val(options.endPos[1]);
+          $('#add-panel-start-width').val(options.startDims[0]);
+          $('#add-panel-start-height').val(options.startDims[1]);
+          $('#add-panel-end-width').val(options.endDims[0]);
+          $('#add-panel-end-height').val(options.endDims[1]);
+          $('#add-panel-event-dialog').dialog('option', 'buttons', {
+            'Cancel': function (e, ui) {
+              $(this).dialog('close');
+            },
+            'Save': function (e, ui) {
+              options.startPos[0] = parseFloat($('#add-panel-start-x').val());
+              options.startPos[1] = parseFloat($('#add-panel-start-y').val());
+              options.startDims[0] = parseFloat($('#add-panel-start-width').val());
+              options.startDims[1] = parseFloat($('#add-panel-start-height').val());
+              options.endPos[0] = parseFloat($('#add-panel-end-x').val());
+              options.endPos[1] = parseFloat($('#add-panel-end-y').val());
+              options.endDims[0] = parseFloat($('#add-panel-end-width').val());
+              options.endDims[1] = parseFloat($('#add-panel-end-height').val());
+              currentSequence.popcorn.removeTrackEvent(options.popcorn._id);
+              options.popcorn = makePopcorn(eventObj.options.panel.canvas, eventObj.start, eventObj.end, options.startPos, options.endPos, options.startDims, options.endDims);
+              eventObj.element.innerHTML = 'p: ' + options.startPos + '&rarr;' + options.endPos + '<br />d: ' + options.startDims + '&rarr;' + options.endDims;
+              $(this).dialog('close');
+            },
+          });
+          $('#add-panel-event-dialog').dialog('open');
+        },
+        moved: function (track, eventObj, event, ui) {
+          var options = eventObj.options;
+          currentSequence.popcorn.removeTrackEvent(options.popcorn._id)
+          options.popcorn = makePopcorn(eventObj.options.panel.canvas, eventObj.start, eventObj.end, options.startPos, options.endPos, options.startDims, options.endDims);
+        },
+        select: function (track, eventObj, event) {
+          $(eventObj.element).addClass('track-event-selected');
+        },
+        deselect: function (track, eventObj, event) {
+          $(eventObj.element).removeClass('track-event-selected');
+        },
+      });
+
+    })();
 
     (function () {
 
@@ -302,14 +421,18 @@ var LittleBrother = (function () {
         return popcorn.getTrackEvent(popcorn.getLastTrackEventId());
       } //makePopcorn
 
-      $('#add-camera-dialog').dialog({
+      $('#add-camera-event-dialog').dialog({
         autoOpen: false,
         modal: false,
         height: 500,
         width: 500,
         title: 'Edit Camera Event',
-        open: enterEditMode,
-        close: exitEditMode,
+        open: function (e, ui) {
+          enterEditMode();
+        },
+        close: function (e, ui) {
+          exitEditMode();
+        },
       });
 
       $('#add-camera-start-get-pos').click( function (e) {
@@ -332,7 +455,7 @@ var LittleBrother = (function () {
           return {
             left: left,
             width: width,
-            innerHTML: '0,0<br/>0,0' || '',
+            innerHTML: 'p: 0,0 &rarr; 0,0',
             classes: ['track-event'],
           };
         },
@@ -341,11 +464,12 @@ var LittleBrother = (function () {
         },
         dblclick: function (track, eventObj, event, ui) {
           var options = eventObj.options;
+          options.popcorn._natives.end(event, options.popcorn);
           $('#add-camera-start-x').val(options.startPos[0]);
           $('#add-camera-start-y').val(options.startPos[1]);
           $('#add-camera-end-x').val(options.endPos[0]);
           $('#add-camera-end-y').val(options.endPos[1]);
-          $('#add-camera-dialog').dialog('option', 'buttons', {
+          $('#add-camera-event-dialog').dialog('option', 'buttons', {
             'Cancel': function (e, ui) {
               $(this).dialog('close');
             },
@@ -356,12 +480,12 @@ var LittleBrother = (function () {
               options.endPos[1] = parseFloat($('#add-camera-end-y').val());
               currentSequence.popcorn.removeTrackEvent(options.popcorn._id);
               options.popcorn = makePopcorn(eventObj.start, eventObj.end, options.startPos, options.endPos);
-              eventObj.element.innerHTML = options.startPos + '<br />' + options.endPos;
+              eventObj.element.innerHTML = 'p: ' + options.startPos + '&rarr;' + options.endPos;
               $(this).dialog('close');
             },
           });
 
-          $('#add-camera-dialog').dialog('open');
+          $('#add-camera-event-dialog').dialog('open');
         },
         moved: function (track, eventObj, event, ui) {
           var options = eventObj.options;
@@ -578,7 +702,7 @@ var LittleBrother = (function () {
       canvas.style.left = this.position[1] + 'px';
       $(canvas).draggable({
         start: function (event, ui) {
-          if (event.altKey || event.shiftKey) {
+          if (event.altKey || event.shiftKey || (editingObject !== canvas)) {
             return false;
           } //if
           currentSequence.sortPanels(that);
@@ -589,7 +713,7 @@ var LittleBrother = (function () {
       });
 
       canvas.addEventListener('mousedown', function (e) {
-        if (e.shiftKey) {
+        if (e.shiftKey && editingObject === canvas) {
 
           var mouseDownPos = [e.pageX, e.pageY], 
               canvasSize = [0,0], 
